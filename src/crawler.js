@@ -1,10 +1,12 @@
 const { program } = require("commander");
 const axios = require("axios");
 const unfluff = require("unfluff");
+const fs = require("fs");
 
 program
   .requiredOption("--url <url>", "Initial URL to start crawling from")
-  .option("--maxdist <maxdist>", "Maximum distance from the initial website");
+  .option("--maxdist <maxdist>", "Maximum distance from the initial website")
+  .option("--output <output>", "Output file for the results");
 
 program.parse(process.argv);
 const options = program.opts();
@@ -14,7 +16,7 @@ const results = {
 
 async function crawl(url, depth) {
   if (depth === 0) return;
-  if (results.pages.length > 10) return;
+  if (results.pages.length >= 1000) return;
 
   try {
     const response = await axios.get(url);
@@ -39,8 +41,9 @@ async function crawl(url, depth) {
 
 async function main() {
   await crawl(options.url, parseInt(options.maxdist));
-  console.log("results", results.pages);
-  // ToDo: save results
+  const jsonData = JSON.stringify(results, null, 2);
+  fs.writeFileSync(options.output, jsonData);
+  console.log(`Results saved in ${options.output}`);
 }
 
 main().catch((error) => {
