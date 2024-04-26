@@ -13,9 +13,11 @@ const results = {
 };
 
 async function crawl(url, depth) {
+  if (depth === 0) return;
+  if (results.pages.length > 10) return;
+
   try {
     const response = await axios.get(url);
-    console.log("response", unfluff(response.data));
     const { title, text, links } = unfluff(response.data);
     results.pages.push({
       url,
@@ -26,7 +28,7 @@ async function crawl(url, depth) {
       for (const link of links) {
         if (typeof link.href === "string" && link.href.startsWith("/")) {
           const nextUrl = `${options.url}${link.href}`;
-          console.log(nextUrl);
+          await crawl(nextUrl, depth - 1);
         }
       }
     }
@@ -37,6 +39,7 @@ async function crawl(url, depth) {
 
 async function main() {
   await crawl(options.url, parseInt(options.maxdist));
+  console.log("results", results.pages);
   // ToDo: save results
 }
 
