@@ -8,13 +8,28 @@ program
 
 program.parse(process.argv);
 const options = program.opts();
+const results = {
+  pages: [],
+};
 
 async function crawl(url, depth) {
   try {
     const response = await axios.get(url);
     console.log("response", unfluff(response.data));
     const { title, text, links } = unfluff(response.data);
-    console.log(title, text, links);
+    results.pages.push({
+      url,
+      title,
+      text,
+    });
+    if (Array.isArray(links)) {
+      for (const link of links) {
+        if (typeof link.href === "string" && link.href.startsWith("/")) {
+          const nextUrl = `${options.url}${link.href}`;
+          console.log(nextUrl);
+        }
+      }
+    }
   } catch (error) {
     console.error(`Error crawling ${url}: ${error.message}`);
   }
